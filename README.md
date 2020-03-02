@@ -1,0 +1,3 @@
+# SZPT-Course
+
+todo.
