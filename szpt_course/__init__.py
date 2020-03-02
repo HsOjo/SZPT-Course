@@ -1,1 +1,1 @@
-from .course import query
+from .course import Course
