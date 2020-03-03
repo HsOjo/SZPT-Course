@@ -8,8 +8,24 @@ from .model import CourseModel
 
 
 class Course:
+    MAP_DAYS = {
+        '星期日': 0,
+        '星期天': 0,
+        '星期一': 1,
+        '星期二': 2,
+        '星期三': 3,
+        '星期四': 4,
+        '星期五': 5,
+        '星期六': 6,
+    }
+
     def __init__(self, host):
         self._url = 'http://%s/kb/WebKb/Kbcx.aspx' % host
+
+        self._current_stu_year = ''
+        self._current_date = ''
+        self._current_week = -1
+        self._current_day = -1
 
         self._data = {
             '__EVENTTARGET': '',
@@ -23,13 +39,40 @@ class Course:
             'btnStuNo': '按学号查询',
         }
 
+        self.refresh_state()
+
     def refresh_state(self):
         resp = requests.get(self._url)
-        form_1 = common.generate_data(common.extract_forms(resp.text)[0]['inputs'])
+        resp_str = resp.text
+        form_1 = common.generate_data(common.extract_forms(resp_str)[0]['inputs'])
         self._data['__VIEWSTATE'] = form_1['__VIEWSTATE']
         self._data['__EVENTVALIDATION'] = form_1['__EVENTVALIDATION']
 
-    def query(self, student_id, count=0):
+        [stu_year] = re.findall('深圳职业技术学院课表查询系统\((.*?)\)', resp_str)
+        [date_time] = re.findall('今天是(\d+-\d+-\d+)　第(\d+)周 (星期.)', resp_str)
+
+        self._current_stu_year = stu_year
+        self._current_date, self._current_week, self._current_day = date_time
+        self._current_week = int(self._current_week)
+        self._current_day = self.MAP_DAYS.get(self._current_day)
+
+    @property
+    def current_stu_year(self):
+        return self._current_stu_year
+
+    @property
+    def current_date(self):
+        return self._current_date
+
+    @property
+    def current_week(self):
+        return self._current_week
+
+    @property
+    def current_day(self):
+        return self._current_day
+
+    def query(self, student_id):
         data = self._data.copy()
         data['txtStudntID'] = student_id
         resp = requests.post(self._url, data)
@@ -40,10 +83,6 @@ class Course:
                 course = CourseModel(**course)
                 courses.append(course)
             return courses
-        elif count < 3:
-            count += 1
-            self.refresh_state()
-            return self.query(student_id, count)
 
     @staticmethod
     def _match(courses_str):
@@ -88,16 +127,6 @@ class Course:
         if courses is None:
             return None
 
-        days = {
-            '星期日': 0,
-            '星期天': 0,
-            '星期一': 1,
-            '星期二': 2,
-            '星期三': 3,
-            '星期四': 4,
-            '星期五': 5,
-            '星期六': 6,
-        }
         courses_1 = []
         courses_2 = []
 
@@ -123,7 +152,7 @@ class Course:
         for course in courses_1:
             if 'day' in course.keys():
                 day = course.pop('day')
-                course['day'] = days.get(day)
+                course['day'] = Course.MAP_DAYS.get(day)
 
         for course in courses_1:
             range_ = course.pop('range').translate(str.maketrans({'第': '', '节': ''}))
