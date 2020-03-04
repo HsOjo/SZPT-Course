@@ -91,11 +91,11 @@ class Course:
             prev_course = {}
             for line in content.splitlines():
                 course = re.match(
-                    '''<td align="center" valign="middle"><font color="#330099" size="2">(?P<type>.*?)</font></td><td><font color="#330099" size="2"><a target="_blank">(?P<class_>.*?)</a></font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<szpt_course>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<teacher>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<teacher_spare>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<week>.*?)</font></td><td align="center" valign=".*?"><font color="#330099" size="2">(?P<place>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<day>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<range>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<remark>.*?)</font></td>''',
+                    '''<td align="center" valign="middle"><font color="#330099" size="2">(?P<type>.*?)</font></td><td><font color="#330099" size="2"><a target="_blank">(?P<class_>.*?)</a></font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<course>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<teacher>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<teacher_spare>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<week>.*?)</font></td><td align="center" valign=".*?"><font color="#330099" size="2">(?P<place>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<day>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<range>.*?)</font></td><td align="center" valign="middle"><font color="#330099" size="2">(?P<remark>.*?)</font></td>''',
                     line.strip())
                 if course is not None:
                     course = course.groupdict()
-                    if course['class_'] == '' and course['szpt_course'] == '':
+                    if course['class_'] == '' and course['course'] == '':
                         course.update(prev_course)
                     if course['teacher'] != '':
                         courses.append(course)
