@@ -12,7 +12,7 @@ setuptools.setup(
     version="0.0.1",
     author="HsOjo",
     author_email="hsojo@qq.com",
-    keywords='hsojo python3',
+    keywords='hsojo python3 szpt course',
     description='''A simple Course query Python package for SZPT.''',
     long_description=long_description,
     long_description_content_type="text/markdown",
