@@ -19,8 +19,8 @@ class Course:
         '星期六': 6,
     }
 
-    def __init__(self, host):
-        self._url = 'http://%s/kb/WebKb/Kbcx.aspx' % host
+    def __init__(self, host, auth=None, protocol='http'):
+        self._url = '%s://%s/kb/WebKb/Kbcx.aspx' % (protocol, host)
 
         self._current_stu_year = ''
         self._current_date = ''
@@ -39,10 +39,13 @@ class Course:
             'btnStuNo': '按学号查询',
         }
 
+        self._session = requests.session()
+        self._session.auth = auth
+
         self.refresh_state()
 
     def refresh_state(self):
-        resp = requests.get(self._url)
+        resp = self._session.get(self._url)
         resp_str = resp.text
         form_1 = common.generate_data(common.extract_forms(resp_str)[0]['inputs'])
         self._data['__VIEWSTATE'] = form_1['__VIEWSTATE']
@@ -75,7 +78,7 @@ class Course:
     def query(self, student_id):
         data = self._data.copy()
         data['txtStudntID'] = student_id
-        resp = requests.post(self._url, data)
+        resp = self._session.post(self._url, data)
         courses_data = self._parse(self._match(resp.text))
         if courses_data is not None:
             courses = []
