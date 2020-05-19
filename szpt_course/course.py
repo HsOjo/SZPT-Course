@@ -42,11 +42,11 @@ class Course:
         self._session = requests.session()
         self._session.auth = auth
 
-        self.refresh_state()
+    def refresh_state(self, resp_str=None):
+        if resp_str is None:
+            resp = self._session.get(self._url)
+            resp_str = resp.text
 
-    def refresh_state(self):
-        resp = self._session.get(self._url)
-        resp_str = resp.text
         form_1 = common.generate_data(common.extract_forms(resp_str)[0]['inputs'])
         self._data['__VIEWSTATE'] = form_1['__VIEWSTATE']
         self._data['__EVENTVALIDATION'] = form_1['__EVENTVALIDATION']
@@ -79,7 +79,9 @@ class Course:
         data = self._data.copy()
         data['txtStudntID'] = student_id
         resp = self._session.post(self._url, data)
-        courses_data = self._parse(self._match(resp.text))
+        resp_str = resp.text
+        self.refresh_state(resp_str)
+        courses_data = self._parse(self._match(resp_str))
         if courses_data is not None:
             courses = []
             for course in courses_data:
