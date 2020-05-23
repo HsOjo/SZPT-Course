@@ -1,5 +1,7 @@
+import datetime
 import html
 import re
+from typing import Dict
 
 import requests
 
@@ -26,6 +28,8 @@ class Course:
         self._current_date = ''
         self._current_week = -1
         self._current_day = -1
+
+        self._dates = {}  # type: Dict[int, Dict[int, str]]
 
         self._data = {
             '__EVENTTARGET': '',
@@ -59,6 +63,20 @@ class Course:
         self._current_week = int(self._current_week)
         self._current_day = self.MAP_DAYS.get(self._current_day)
 
+        date = datetime.datetime.strptime(self._current_date, '%Y-%m-%d') - datetime.timedelta(
+            days=(self._current_week - 2) * 7 + self._current_day)
+        dt_day = datetime.timedelta(days=1)
+
+        dates = {}
+        for i in range(1, 21):
+            dates_week = {}
+            for day in range(1,8):
+                date += dt_day
+                dates_week[day % 7] = date.strftime('%Y-%m-%d')
+            dates[i] = dates_week
+
+        self._dates = dates
+
     @property
     def current_stu_year(self):
         return self._current_stu_year
@@ -74,6 +92,10 @@ class Course:
     @property
     def current_day(self):
         return self._current_day
+
+    @property
+    def dates(self):
+        return self._dates
 
     def query(self, student_id):
         data = self._data.copy()
@@ -157,7 +179,7 @@ class Course:
         for course in courses_1:
             if 'day' in course.keys():
                 day = course.pop('day')
-                course['day'] = Course.MAP_DAYS.get(day)
+                course['day'] = Course.MAP_DAYS.get(day, -1)
 
         for course in courses_1:
             range_ = course.pop('range').translate(str.maketrans({'第': '', '节': ''}))
