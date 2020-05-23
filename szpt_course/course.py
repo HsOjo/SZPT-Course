@@ -11,14 +11,14 @@ from .model import CourseModel
 
 class Course:
     MAP_DAYS = {
-        '星期日': 0,
-        '星期天': 0,
         '星期一': 1,
         '星期二': 2,
         '星期三': 3,
         '星期四': 4,
         '星期五': 5,
         '星期六': 6,
+        '星期日': 7,
+        '星期天': 7,
     }
 
     def __init__(self, host, auth=None, protocol='http'):
@@ -70,9 +70,9 @@ class Course:
         dates = {}
         for i in range(1, 21):
             dates_week = {}
-            for day in range(1,8):
+            for day in range(1, 8):
                 date += dt_day
-                dates_week[day % 7] = date.strftime('%Y-%m-%d')
+                dates_week[day] = date.strftime('%Y-%m-%d')
             dates[i] = dates_week
 
         self._dates = dates
