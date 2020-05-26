@@ -1,7 +1,6 @@
 import datetime
 import html
 import re
-from typing import Dict
 
 import requests
 
@@ -29,7 +28,7 @@ class Course:
         self._current_week = -1
         self._current_day = -1
 
-        self._dates = {}  # type: Dict[int, Dict[int, str]]
+        self._dates = []
 
         self._data = {
             '__EVENTTARGET': '',
@@ -64,16 +63,16 @@ class Course:
         self._current_day = self.MAP_DAYS.get(self._current_day)
 
         date = datetime.datetime.strptime(self._current_date, '%Y-%m-%d') - datetime.timedelta(
-            days=(self._current_week - 2) * 7 + self._current_day)
+            days=(self._current_week - 1) * 7 - self._current_day)
         dt_day = datetime.timedelta(days=1)
 
-        dates = {}
+        dates = []
         for i in range(1, 21):
             dates_week = {}
             for day in range(1, 8):
                 date += dt_day
                 dates_week[day] = date.strftime('%Y-%m-%d')
-            dates[i] = dates_week
+            dates.append(dates_week)
 
         self._dates = dates
 
