@@ -63,7 +63,7 @@ class Course:
         self._current_day = self.MAP_DAYS.get(self._current_day)
 
         date = datetime.datetime.strptime(self._current_date, '%Y-%m-%d') - datetime.timedelta(
-            days=(self._current_week - 1) * 7 - self._current_day)
+            days=(self._current_week - 2) * 7 + self.current_day)
         dt_day = datetime.timedelta(days=1)
 
         dates = []
