@@ -20,7 +20,7 @@ class Course:
         '星期天': 7,
     }
 
-    def __init__(self, host, auth=None, protocol='http'):
+    def __init__(self, host, auth=None, protocol='http', init=True):
         self._url = '%s://%s/kb/WebKb/Kbcx.aspx' % (protocol, host)
 
         self._current_stu_year = ''
@@ -28,6 +28,7 @@ class Course:
         self._current_week = -1
         self._current_day = -1
 
+        self._weeks = []
         self._dates = []
 
         self._data = {
@@ -45,6 +46,9 @@ class Course:
         self._session = requests.session()
         self._session.auth = auth
 
+        if init:
+            self.refresh_state()
+
     def refresh_state(self, resp_str=None):
         if resp_str is None:
             resp = self._session.get(self._url)
@@ -56,6 +60,8 @@ class Course:
 
         [stu_year] = re.findall('深圳职业技术学院课表查询系统\((.*?)\)', resp_str)
         [date_time] = re.findall('今天是(\d+-\d+-\d+)　第(\d+)周 (星期.)', resp_str)
+        weeks = re.findall('<option value="\d+">第(\d+)周</option>', resp_str)
+        weeks = [int(i) for i in weeks]
 
         self._current_stu_year = stu_year
         self._current_date, self._current_week, self._current_day = date_time
@@ -67,7 +73,7 @@ class Course:
         dt_day = datetime.timedelta(days=1)
 
         dates = []
-        for i in range(1, 21):
+        for _ in weeks:
             dates_week = {}
             for day in range(1, 8):
                 date += dt_day
@@ -75,6 +81,7 @@ class Course:
             dates.append(dates_week)
 
         self._dates = dates
+        self._weeks = weeks
 
     @property
     def current_stu_year(self):
@@ -96,22 +103,20 @@ class Course:
     def dates(self):
         return self._dates
 
+    @property
+    def weeks(self):
+        return self._weeks
+
     def query(self, student_id):
         data = self._data.copy()
         data['txtStudntID'] = student_id
         resp = self._session.post(self._url, data)
         resp_str = resp.text
         self.refresh_state(resp_str)
-        courses_data = self._parse(self._match(resp_str))
-        if courses_data is not None:
-            courses = []
-            for course in courses_data:
-                course = CourseModel(**course)
-                courses.append(course)
-            return courses
+        return self._query(resp_str)
 
     @staticmethod
-    def _match(courses_str):
+    def _query(resp_str):
         def match(content):
             courses = []
             prev_course = {}
@@ -125,7 +130,7 @@ class Course:
                         course.update(prev_course)
                     if course['teacher'] != '':
                         courses.append(course)
-                    if course['type'] == '整周' and course['teacher'] == '':
+                    if course['type'] != '' and course['teacher'] == '':
                         pks = []
                         for k, v in course.items():
                             if v == '':
@@ -136,16 +141,33 @@ class Course:
 
             return courses
 
-        if 'gvSchedule' not in courses_str:
+        if 'gvSchedule' not in resp_str:
             return None
 
         remove = dict.fromkeys((ord(c) for c in u"\xa0"))
-        [main] = re.findall('<table .*?id="gvSchedule".*?>([\s\S]*?)</table>', courses_str)
+        [main] = re.findall('<table .*?id="gvSchedule".*?>([\s\S]*?)</table>', resp_str)
         main = html.unescape(main).translate(remove)
-        [week] = re.findall('<table .*?id="gvScheduleAllWeek".*?>([\s\S]*?)</table>', courses_str)
+        [week] = re.findall('<table .*?id="gvScheduleAllWeek".*?>([\s\S]*?)</table>', resp_str)
         week = html.unescape(week).translate(remove)
 
-        all = match(main) + match(week)
+        try:
+            [name] = re.findall(
+                '<span id="ScheduleTitle" style="display:inline-block;"><b><font face="隶书" size="5">.*?\((.*?)\)</font></b></span>',
+                resp_str)
+        except:
+            name = ''
+
+        courses_data = Course._parse(match(main) + match(week))
+        courses = []
+        for course in courses_data:
+            course = CourseModel(**course)
+            courses.append(course)
+
+        all = dict(
+            name=name,
+            courses=courses,
+        )
+
         return all
 
     @staticmethod
