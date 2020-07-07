@@ -128,9 +128,9 @@ class Course:
                     course = course.groupdict()
                     if course['class_'] == '' and course['course'] == '':
                         course.update(prev_course)
-                    if course['teacher'] != '':
+                    if course['week'] != '':
                         courses.append(course)
-                    if course['type'] != '' and course['teacher'] == '':
+                    if course['type'] != '' and course['week'] == '':
                         pks = []
                         for k, v in course.items():
                             if v == '':
