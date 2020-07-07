@@ -59,13 +59,13 @@ class Course:
         self._data['__EVENTVALIDATION'] = form_1['__EVENTVALIDATION']
 
         [stu_year] = re.findall('深圳职业技术学院课表查询系统\((.*?)\)', resp_str)
-        [date_time] = re.findall('今天是(\d+-\d+-\d+)　第(\d+)周 (星期.)', resp_str)
+        [date_time] = re.findall('今天是(\d+-\d+-\d+)\s*(第(\d+)周)?\s*(星期.)\s*(\(未开学\))?', resp_str)
         weeks = re.findall('<option value="\d+">第(\d+)周</option>', resp_str)
         weeks = [int(i) for i in weeks]
 
         self._current_stu_year = stu_year
-        self._current_date, self._current_week, self._current_day = date_time
-        self._current_week = int(self._current_week)
+        self._current_date, _, self._current_week, self._current_day, no_week = date_time
+        self._current_week = int(self._current_week) if not no_week else 0
         self._current_day = self.MAP_DAYS.get(self._current_day)
 
         date = datetime.datetime.strptime(self._current_date, '%Y-%m-%d') - datetime.timedelta(

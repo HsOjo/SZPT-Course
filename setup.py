@@ -9,7 +9,7 @@ with open("requirements.txt", "r") as fh:
 
 setuptools.setup(
     name="SZPT-Course",
-    version="0.1.0",
+    version="0.1.1",
     author="HsOjo",
     author_email="hsojo@qq.com",
     keywords='hsojo python3 szpt course',
