@@ -204,7 +204,13 @@ class Course:
 
         for course in courses_1:
             range_ = course.pop('range').translate(str.maketrans({'第': '', '节': ''}))
-            nodes = range_.split(',')
+            if '-' in range_:
+                nodes = []
+                s, e = range_.split('-')
+                for i in range(int(s), int(e) + 1):
+                    nodes.append(str(i))
+            else:
+                nodes = range_.split(',')
             for node in nodes:
                 new_course = course.copy()
                 if node.isnumeric():
